@@ -1,0 +1,101 @@
+# ==========================
+# 1. 라이브러리 설치 및 불러오기
+# ==========================
+!pip install -q scikit-learn pandas
+
+import pandas as pd
+import numpy as np
+import pickle
+
+from google.colab import files
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# ==========================
+# 2. CSV 파일 업로드
+# ==========================
+print("diabetes.csv 파일을 업로드하세요.")
+uploaded = files.upload()
+
+# 업로드된 파일 이름 자동 인식
+filename = list(uploaded.keys())[0]
+
+# ==========================
+# 3. 데이터 불러오기
+# ==========================
+df = pd.read_csv(filename)
+
+print("\n데이터 확인")
+print(df.head())
+
+# ==========================
+# 4. 입력(X) / 정답(y) 분리
+# ==========================
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+# ==========================
+# 5. 학습용 / 테스트용 분리
+# ==========================
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# ==========================
+# 6. 모델 학습
+# ==========================
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=8,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+# ==========================
+# 7. 성능 평가
+# ==========================
+pred = model.predict(X_test)
+
+print("\n정확도:")
+print(f"{accuracy_score(y_test, pred):.4f}")
+
+print("\n분류 결과:")
+print(classification_report(y_test, pred))
+
+# ==========================
+# 8. 모델 저장
+# ==========================
+with open("diabetes_model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
+print("\n모델 저장 완료: diabetes_model.pkl")
+
+# ==========================
+# 9. 예시 환자 예측
+# ==========================
+example_patient = np.array([
+    [148, 72, 35, 0, 33.6, 0.627, 50]
+])
+
+prediction = model.predict(example_patient)[0]
+probability = model.predict_proba(example_patient)[0][1]
+
+print("\n예시 환자 예측")
+
+if prediction == 1:
+    print("결과: 당뇨병 가능성 있음")
+else:
+    print("결과: 당뇨병 가능성 낮음")
+
+print(f"당뇨병 확률: {probability*100:.2f}%")
+
+# ==========================
+# 10. 모델 다운로드
+# ==========================
+files.download("diabetes_model.pkl")
