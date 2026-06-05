@@ -1,0 +1,111 @@
+import streamlit as st
+import pandas as pd
+import pickle
+
+# ======================================
+# 모델 불러오기
+# ======================================
+
+with open("hypertension_model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+# ======================================
+# 제목
+# ======================================
+
+st.title("고혈압 예측 AI")
+
+# ======================================
+# 사용자 입력
+# ======================================
+
+age = st.number_input("나이", min_value=1, max_value=120)
+
+gender = st.selectbox(
+    "성별",
+    ["Male", "Female"]
+)
+
+blood_pressure = st.number_input(
+    "현재 혈압",
+    min_value=50,
+    max_value=250
+)
+
+cholesterol = st.number_input(
+    "콜레스테롤 수치",
+    min_value=50,
+    max_value=500
+)
+
+exercise = st.selectbox(
+    "운동 습관",
+    ["Low", "Medium", "High"]
+)
+
+smoking = st.selectbox(
+    "흡연 여부",
+    ["Yes", "No"]
+)
+
+family_heart = st.selectbox(
+    "가족 심장질환 이력",
+    ["Yes", "No"]
+)
+
+diabetes = st.selectbox(
+    "당뇨병 여부",
+    ["Yes", "No"]
+)
+
+alcohol = st.selectbox(
+    "음주량",
+    ["Low", "Medium", "High"]
+)
+
+stress = st.selectbox(
+    "스트레스 수준",
+    ["Low", "Medium", "High"]
+)
+
+sugar = st.selectbox(
+    "당 섭취량",
+    ["Low", "Medium", "High"]
+)
+
+# ======================================
+# 예측 버튼
+# ======================================
+
+if st.button("예측하기"):
+
+    patient = pd.DataFrame([{
+        "Age": age,
+        "Gender": gender,
+        "Blood Pressure": blood_pressure,
+        "Cholesterol Level": cholesterol,
+        "Exercise Habits": exercise,
+        "Smoking": smoking,
+        "Family Heart Disease": family_heart,
+        "Diabetes": diabetes,
+        "Alcohol Consumption": alcohol,
+        "Stress Level": stress,
+        "Sugar Consumption": sugar
+    }])
+
+    prediction = model.predict(patient)[0]
+
+    probabilities = model.predict_proba(patient)[0]
+
+    st.subheader("예측 결과")
+
+    if prediction == "Yes":
+        st.error("고혈압 위험이 높습니다.")
+
+    else:
+        st.success("고혈압 위험이 낮습니다.")
+
+    st.subheader("예측 확률")
+
+    for label, prob in zip(model.classes_, probabilities):
+        st.write(f"{label}: {prob*100:.2f}%")
