@@ -1,0 +1,44 @@
+import pickle
+import pandas as pd
+import streamlit as st
+
+# =========================
+# 모델 불러오기 (파일 맨 위에 1번만)
+# =========================
+with open("thyroid_model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+# =========================
+# 예측 버튼
+# =========================
+if st.button("예측하기"):
+
+    patient = pd.DataFrame([{
+        "Age": age,
+        "Gender": gender,
+        "Country": country,
+        "Ethnicity": ethnicity,
+        "Family_History": family_history,
+        "Radiation_Exposure": radiation_exposure,
+        "Iodine_Deficiency": iodine_deficiency,
+        "Smoking": smoking,
+        "Obesity": obesity,
+        "Diabetes": diabetes
+    }])
+
+    prediction = model.predict(patient)[0]
+    probabilities = model.predict_proba(patient)[0]
+
+    st.subheader("예측 결과")
+
+    if prediction == "Low":
+        st.success("저위험군 (Low)")
+    elif prediction == "Medium":
+        st.warning("중위험군 (Medium)")
+    else:
+        st.error("고위험군 (High)")
+
+    st.write("### 위험도 확률")
+
+    for label, prob in zip(model.classes_, probabilities):
+        st.write(f"**{label}** : {prob*100:.2f}%")
